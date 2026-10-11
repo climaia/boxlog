@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>BoxLog</title>
+<meta name="theme-color" content="#0A3D91">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BoxLog">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fondo: #E4E8EC; --superficie: #FFFFFF; --superficie-2: #F2F5F8;
+  --tinta: #0F1E33; --tinta-2: #46576E; --linea: #C5CED9;
+  --azul: #0A3D91; --sobre-azul: #FFFFFF;
+  --amarillo: #FFD21F; --sobre-amarillo: #1A1500;
+  --rojo: #B3261E; --sobre-rojo: #FFFFFF; --verde: #1C7A3A;
+  --foco: #0A3D91; --panel: #0F1E33; --sobre-panel: #FFFFFF;
+  --titulo: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --texto: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: #0A1524; --superficie: #12243A; --superficie-2: #0E1D31;
+    --tinta: #EAF0F7; --tinta-2: #9DB0C7; --linea: #27425F;
+    --azul: #4A86F5; --sobre-azul: #06142B;
+    --amarillo: #FFD21F; --sobre-amarillo: #1A1500;
+    --rojo: #FF7A70; --sobre-rojo: #2A0603; --verde: #62D68D; --foco: #FFD21F; --panel: #050B14; --sobre-panel: #EAF0F7;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: #0A1524; --superficie: #12243A; --superficie-2: #0E1D31;
+  --tinta: #EAF0F7; --tinta-2: #9DB0C7; --linea: #27425F;
+  --azul: #4A86F5; --sobre-azul: #06142B;
+  --amarillo: #FFD21F; --sobre-amarillo: #1A1500;
+  --rojo: #FF7A70; --sobre-rojo: #2A0603; --verde: #62D68D; --foco: #FFD21F; --panel: #050B14; --sobre-panel: #EAF0F7;
+}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100%; background: var(--fondo); color: var(--tinta); font-family: var(--texto); font-size: 17px; line-height: 1.45; -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { font-family: var(--titulo); font-weight: 700; margin: 0; letter-spacing: 0.2px; line-height: 1.1; }
+h2 { font-size: 26px; }
+h3 { font-size: 21px; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+.ayuda { color: var(--tinta-2); font-size: 15px; }
+.centro { text-align: center; }
+
+/* --- estructura --- */
+#raiz { max-width: 560px; margin: 0 auto; min-height: 100vh; background: var(--superficie-2); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+.cabecera { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 12px; background: var(--superficie); border-bottom: 1px solid var(--linea); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.chapa { display: inline-flex; flex-direction: column; min-width: 0; border: 3px solid var(--tinta); border-radius: 9px; background: #fff; overflow: hidden; color: #0B1220; box-shadow: 0 2px 0 var(--tinta); }
+.chapa .banda { background: #0A3D91; color: #fff; font-family: var(--titulo); font-weight: 600; font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; text-align: center; padding: 1px 12px; }
+.chapa .nombre { font-family: var(--titulo); font-weight: 800; font-size: 25px; line-height: 1; padding: 3px 12px 4px; text-transform: uppercase; letter-spacing: 1.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.engranaje { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid var(--linea); border-radius: 50%; background: var(--superficie); text-decoration: none; color: var(--tinta); flex: none; }
+.pantalla { padding: 18px 16px 8px; }
+.bloque { margin-top: 26px; }
+.bloque:first-child { margin-top: 0; }
+.bloque > h3 { margin-bottom: 10px; }
+.sub { margin: 4px 0 14px; }
+
+/* --- tablero de contadores --- */
+.tablero { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--panel); color: var(--sobre-panel); border: 1px solid var(--linea); border-radius: 10px; }
+.tablero > div { padding: 14px 10px 12px; text-align: center; }
+.tablero > div + div { border-left: 1px solid rgba(255,255,255,0.18); }
+.tablero b { display: block; font-family: var(--titulo); font-size: 44px; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tablero span { font-size: 14px; opacity: 0.85; }
+
+/* --- botones --- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 20px; border: 2px solid var(--tinta); border-radius: 10px; background: var(--superficie); font-weight: 600; text-decoration: none; color: var(--tinta); }
+.btn.principal { background: var(--azul); color: var(--sobre-azul); border-color: var(--azul); font-size: 19px; }
+.btn.peligro { border-color: var(--rojo); color: var(--rojo); }
+.btn.chico { min-height: 44px; padding: 0 14px; font-size: 16px; }
+.btn.lleno { width: 100%; }
+.btn:disabled { opacity: 0.5; }
+.fila-btn { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+
+/* --- listas --- */
+.lista { background: var(--superficie); border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); margin: 0 -16px; }
+.item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--linea); min-height: 62px; text-decoration: none; color: inherit; width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; }
+.item:last-child { border-bottom: 0; }
+.item .cuerpo { flex: 1; min-width: 0; }
+.item .t { font-weight: 600; overflow-wrap: anywhere; }
+.item .s { color: var(--tinta-2); font-size: 15px; overflow-wrap: anywhere; }
+.vacio { padding: 18px 16px; background: var(--superficie); border: 2px dashed var(--linea); border-radius: 10px; }
+.vacio p + p, .vacio p + .btn, .vacio .btn { margin-top: 12px; }
+
+/* --- estados --- */
+.punto { width: 14px; height: 14px; border-radius: 50%; flex: none; background: var(--verde); }
+.punto.venc { background: var(--rojo); }
+.punto.pronto { background: var(--amarillo); box-shadow: 0 0 0 2px var(--tinta); }
+.punto.sin { background: transparent; border: 2px dashed var(--tinta-2); }
+.etiqueta { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; background: var(--superficie-2); border: 1px solid var(--linea); }
+.etiqueta.venc { background: var(--rojo); color: var(--sobre-rojo); border-color: var(--rojo); }
+.etiqueta.pronto { background: var(--amarillo); color: var(--sobre-amarillo); border-color: var(--amarillo); }
+
+/* --- checklist --- */
+.segmento { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid var(--tinta); border-radius: 10px; overflow: hidden; }
+.segmento a { text-align: center; padding: 12px 6px; font-weight: 600; text-decoration: none; color: var(--tinta); background: var(--superficie); }
+.segmento a[aria-current="true"] { background: var(--tinta); color: var(--superficie); }
+.progreso { height: 10px; background: var(--linea); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progreso i { display: block; height: 100%; background: var(--verde); width: 0; transition: width .2s; }
+.tilde { display: flex; align-items: center; gap: 14px; padding: 14px 16px; min-height: 64px; border: 0; border-bottom: 1px solid var(--linea); background: none; width: 100%; text-align: left; }
+.tilde:last-child { border-bottom: 0; }
+.tilde .caja { width: 32px; height: 32px; flex: none; border: 3px solid var(--tinta); border-radius: 8px; display: grid; place-items: center; background: var(--superficie); }
+.tilde .caja svg { width: 22px; height: 22px; opacity: 0; }
+.tilde[aria-checked="true"] .caja { background: var(--verde); border-color: var(--verde); }
+.tilde[aria-checked="true"] .caja svg { opacity: 1; color: #fff; }
+.tilde[aria-checked="true"] .texto { color: var(--tinta-2); text-decoration: line-through; text-decoration-thickness: 2px; }
+.texto { flex: 1; font-weight: 500; overflow-wrap: anywhere; }
+.editor { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--linea); }
+.editor input { flex: 1; min-width: 0; }
+.mini { width: 44px; height: 44px; border: 1px solid var(--linea); border-radius: 8px; background: var(--superficie); flex: none; }
+
+/* --- formularios --- */
+.campo { margin-top: 14px; }
+.campo label, .campo .rotulo { display: block; font-weight: 600; margin-bottom: 4px; }
+input[type=text], input[type=number], input[type=date], input[type=time], select, textarea { width: 100%; min-height: 50px; padding: 10px 12px; border: 2px solid var(--linea); border-radius: 10px; background: var(--superficie); color: var(--tinta); }
+textarea { min-height: 96px; resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: var(--azul); }
+.par { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.cuatro { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10px; }
+.rueda { background: var(--superficie); border: 1px solid var(--linea); border-radius: 10px; padding: 10px; }
+.rueda .rotulo { font-size: 15px; margin-bottom: 6px; }
+.rueda .par { gap: 6px; }
+.rueda input { min-height: 46px; padding: 6px 8px; }
+.rueda small { display: block; color: var(--tinta-2); font-size: 13px; margin-top: 2px; }
+.dictado { position: relative; }
+.dictado textarea { padding-right: 58px; }
+.mic { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--linea); background: var(--superficie-2); display: grid; place-items: center; }
+.mic.on { background: var(--rojo); border-color: var(--rojo); color: var(--sobre-rojo); animation: pulso 1s ease-in-out infinite; }
+@keyframes pulso { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .mic.on { animation: none; } .progreso i { transition: none; } }
+.detalle dl { margin: 0; }
+.detalle dt { color: var(--tinta-2); font-size: 15px; margin-top: 12px; }
+.detalle dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; white-space: pre-wrap; }
+.aviso { padding: 12px 14px; border-radius: 10px; background: var(--amarillo); color: var(--sobre-amarillo); font-weight: 600; margin-bottom: 14px; }
+.cartel { padding: 12px 14px; border-radius: 10px; background: var(--superficie); border: 2px solid var(--verde); font-weight: 600; margin-top: 12px; }
+
+/* --- barra de abajo --- */
+.barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--superficie); border-top: 2px solid var(--tinta); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.barra nav { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+.barra a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 2px 8px; min-height: 64px; text-decoration: none; color: var(--tinta-2); font-size: 13px; font-weight: 600; }
+.barra a svg { width: 26px; height: 26px; }
+.barra a[aria-current="true"] { color: var(--tinta); box-shadow: inset 0 4px 0 var(--azul); }
+.barra a[aria-current="true"] svg { color: var(--azul); }
+
+/* --- ventana y aviso corto --- */
+.velo { position: fixed; inset: 0; z-index: 30; background: rgba(5, 12, 22, 0.62); display: grid; place-items: end center; padding: 16px; }
+.ventana { width: 100%; max-width: 520px; background: var(--superficie); border: 2px solid var(--tinta); border-radius: 14px; padding: 18px; }
+.ventana p { font-size: 18px; font-weight: 600; }
+.ventana .acciones { margin-top: 16px; }
+.ventana .acciones .btn { flex: 1; }
+.toast { pointer-events: none; position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(86px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--tinta); color: var(--superficie); padding: 12px 18px; border-radius: 10px; font-weight: 600; max-width: 90vw; }
+.proxima { display: block; background: var(--panel); color: var(--sobre-panel); border: 1px solid var(--linea); border-radius: 10px; padding: 14px 16px; text-decoration: none; }
+.proxima .cuando { display: block; font-family: var(--titulo); font-size: clamp(26px, 8.4vw, 36px); white-space: nowrap; line-height: 1.05; font-weight: 700; margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
+.proxima .que { opacity: 0.88; font-size: 16px; }
+.dia-titulo { margin: 22px 0 8px; }
+.hora { font-family: var(--titulo); font-weight: 700; font-size: 26px; min-width: 66px; font-variant-numeric: tabular-nums; }
+.hora.sin { color: var(--tinta-2); font-size: 16px; font-weight: 600; }
+input[type=file] { width: 100%; min-height: 50px; padding: 10px 12px; border: 2px dashed var(--linea); border-radius: 10px; background: var(--superficie); }
+.oculto { display: none !important; }
+</style>
+</head>
+<body>
+<div id="raiz">
+  <header class="cabecera">
+    <div class="chapa" id="chapa" aria-label="Tu auto"><span class="banda" id="chapaCat"></span><span class="nombre" id="chapaNombre"></span></div>
+    <a class="engranaje" href="#/ajustes" aria-label="Ajustes">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </a>
+  </header>
+  <main id="app" class="pantalla"></main>
+</div>
+<div class="barra"><nav aria-label="Secciones">
+  <a href="#/inicio" data-tab="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></svg>Inicio</a>
+  <a href="#/checklist/antes" data-tab="checklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 9 2 2 3.5-4"/><path d="M8 16h8"/></svg>Checklist</a>
+  <a href="#/fechas" data-tab="fechas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>Fechas</a>
+  <a href="#/salidas" data-tab="salidas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h14l-3 4.5 3 4.5H5"/></svg>Salidas</a>
+  <a href="#/mant" data-tab="mant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>Taller</a>
+</nav></div>
+<div id="capas"></div>
+
+<script>
+(function () {
+'use strict';
+var KEY = 'cuaderno-de-pista-v1';
+var SVG_TILDE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+var SVG_MIC = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
+
+/* ---------- utilidades ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function z2(n) { return String(n).padStart(2, '0'); }
+function hoyISO() { var d = new Date(); return d.getFullYear() + '-' + z2(d.getMonth() + 1) + '-' + z2(d.getDate()); }
+function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3); }
+function aFecha(iso) { var p = String(iso).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function diasEntre(a, b) { return Math.round((aFecha(b) - aFecha(a)) / 86400000); }
+function sumarMeses(iso, m) { var d = aFecha(iso), dia = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + m); var ult = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); d.setDate(Math.min(dia, ult)); return d.getFullYear() + '-' + z2(d.getMonth() + 1) + '-' + z2(d.getDate()); }
+function fechaCorta(iso) { if (!iso) return ''; var p = String(iso).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function fmt(n) { n = Number(n) || 0; return Number.isInteger(n) ? String(n) : (Math.round(n * 10) / 10).toString().replace('.', ','); }
+function num(v) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : null; }
+function plural(n, uno, varios) { return n === 1 ? uno : varios; }
+function parseTiempo(s) {
+  s = String(s || '').trim().replace(',', '.'); if (!s) return null;
+  var m = s.match(/^(?:(\d+):)?(\d{1,2}(?:\.\d{1,3})?)$/); if (!m) return null;
+  var min = m[1] ? +m[1] : 0, seg = parseFloat(m[2]); if (seg >= 60 && m[1]) return null;
+  return Math.round((min * 60 + seg) * 1000);
+}
+function mostrarTiempo(ms) { var m = Math.floor(ms / 60000), s = (ms - m * 60000) / 1000; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(3); }
+
+/* ---------- datos ---------- */
+function listaAntes() { return ['Tuercas de las ruedas ajustadas con torquímetro', 'Presión de los neumáticos', 'Nivel de aceite del motor', 'Nivel de agua', 'Nivel de líquido de frenos', 'Estado de pastillas y discos', 'Pérdidas de aceite, agua o combustible', 'Cinturones y asiento', 'Casco, mono y guantes', 'Extintor y corta corriente', 'Combustible cargado', 'Nada suelto dentro del auto']; }
+function listaDespues() { return ['Presiones en caliente anotadas', 'Nivel de aceite y de agua', 'Pérdidas de aceite, agua o combustible', 'Desgaste y daños en los neumáticos', 'Estado de los frenos', 'Tuercas de las ruedas', 'Golpes o daños en la carrocería', 'Km y notas de la salida cargados']; }
+function items(lista) { return lista.map(function (t) { return { id: uid(), t: t }; }); }
+function nuevoEstado() {
+  return {
+    v: 1, tema: 'auto',
+    auto: { nombre: 'Falcon', categoria: 'TC Regional' },
+    unidadPresion: 'psi', avisoPct: 80, avisoDias: 30,
+    contadores: { salidas: 0, km: 0, horas: 0 },
+    checklists: { antes: items(listaAntes()), despues: items(listaDespues()) },
+    marcas: { antes: {}, despues: {} },
+    tareas: [], salidas: [], fechas: []
+  };
+}
+var S, almacenOK = true;
+function migrar(o) {
+  var b = nuevoEstado();
+  if (!o || typeof o !== 'object') return b;
+  ['tema', 'unidadPresion', 'avisoPct', 'avisoDias'].forEach(function (k) { if (o[k] != null) b[k] = o[k]; });
+  if (o.auto) b.auto = { nombre: String(o.auto.nombre || b.auto.nombre).slice(0, 40), categoria: String(o.auto.categoria || '').slice(0, 40) };
+  if (o.contadores) ['salidas', 'km', 'horas'].forEach(function (k) { var n = Number(o.contadores[k]); b.contadores[k] = isFinite(n) && n >= 0 ? n : 0; });
+  if (o.checklists) ['antes', 'despues'].forEach(function (k) { if (Array.isArray(o.checklists[k])) b.checklists[k] = o.checklists[k].filter(function (x) { return x && x.t; }).map(function (x) { return { id: String(x.id || uid()), t: String(x.t).slice(0, 120) }; }); });
+  if (o.marcas) ['antes', 'despues'].forEach(function (k) { if (o.marcas[k] && typeof o.marcas[k] === 'object') b.marcas[k] = o.marcas[k]; });
+  if (Array.isArray(o.tareas)) b.tareas = o.tareas.filter(function (t) { return t && t.nombre; });
+  if (Array.isArray(o.salidas)) b.salidas = o.salidas.filter(function (t) { return t && t.id; });
+  if (Array.isArray(o.fechas)) b.fechas = o.fechas.filter(function (f) { return f && f.id && Array.isArray(f.sesiones); }).map(function (f) {
+    return { id: String(f.id), pista: String(f.pista || '').slice(0, 60), modo: String(f.modo || ''), revisar: !!f.revisar, sesiones: f.sesiones.filter(function (t) { return t && t.id && t.nombre; }).map(function (t) {
+      var r = t.resultado || {};
+      return { id: String(t.id), nombre: String(t.nombre).slice(0, 40), tipo: String(t.tipo || 'Otro'), dia: String(t.dia || ''), hora: String(t.hora || ''), salidaId: String(t.salidaId || ''), hecha: !!t.hecha, resultado: { puesto: String(r.puesto || '').slice(0, 12), tiempo: String(r.tiempo || '').slice(0, 14), nota: String(r.nota || '').slice(0, 120) } };
+    }) };
+  });
+  return b;
+}
+function cargar() { try { var t = localStorage.getItem(KEY); if (t) return migrar(JSON.parse(t)); } catch (e) { almacenOK = false; } return nuevoEstado(); }
+function guardar() { try { localStorage.setItem(KEY, JSON.stringify(S)); almacenOK = true; } catch (e) { almacenOK = false; } }
+S = cargar();
+
+/* ---------- mantenimiento: estado de cada tarea ---------- */
+var UNIDAD = { salidas: ['salida', 'salidas'], km: ['km', 'km'], horas: ['hora', 'horas'] };
+var TIPOS = { salidas: 'Cada tantas salidas', km: 'Cada tantos km', horas: 'Cada tantas horas de motor', meses: 'Cada tantos meses', fijo: 'Vence en una fecha' };
+function porFecha(vence) {
+  var d = diasEntre(hoyISO(), vence);
+  if (d < 0) return { k: 'venc', rank: 0, txt: 'Venció hace ' + (-d) + ' ' + plural(-d, 'día', 'días') };
+  if (d === 0) return { k: 'pronto', rank: 1, txt: 'Vence hoy' };
+  if (d <= S.avisoDias) return { k: 'pronto', rank: 1, txt: 'Vence en ' + d + ' ' + plural(d, 'día', 'días') };
+  return { k: 'ok', rank: 3, txt: 'Vence el ' + fechaCorta(vence) };
+}
+function estadoTarea(t) {
+  var sin = { k: 'sin', rank: 2, txt: 'Falta cargar el plazo' };
+  if (t.tipo === 'fijo') return t.fecha ? porFecha(t.fecha) : { k: 'sin', rank: 2, txt: 'Falta la fecha de vencimiento' };
+  if (t.tipo === 'meses') return (t.cada > 0 && t.ultima) ? porFecha(sumarMeses(t.ultima, t.cada)) : sin;
+  if (!(t.cada > 0) || !UNIDAD[t.tipo]) return sin;
+  var actual = S.contadores[t.tipo] || 0, usado = actual - (t.ultimo || 0), resta = t.cada - usado, u = UNIDAD[t.tipo];
+  if (resta === 0) return { k: 'venc', rank: 0, txt: 'Toca ahora' };
+  if (resta < 0) return { k: 'venc', rank: 0, txt: 'Se pasó por ' + fmt(-resta) + ' ' + plural(-resta, u[0], u[1]) };
+  var txt = 'Faltan ' + fmt(resta) + ' ' + plural(resta, u[0], u[1]);
+  return { k: usado / t.cada * 100 >= S.avisoPct ? 'pronto' : 'ok', rank: usado / t.cada * 100 >= S.avisoPct ? 1 : 3, txt: txt };
+}
+function descripcionPlazo(t) {
+  if (t.tipo === 'fijo') return 'Vence en una fecha';
+  if (t.tipo === 'meses') return t.cada > 0 ? 'Cada ' + fmt(t.cada) + ' ' + plural(t.cada, 'mes', 'meses') : 'Plazo sin cargar';
+  var u = UNIDAD[t.tipo]; return t.cada > 0 ? 'Cada ' + fmt(t.cada) + ' ' + plural(t.cada, u[0], u[1]) : 'Plazo sin cargar';
+}
+function tareasOrdenadas() { return S.tareas.map(function (t) { return { t: t, e: estadoTarea(t) }; }).sort(function (a, b) { return a.e.rank - b.e.rank || a.t.nombre.localeCompare(b.t.nombre); }); }
+
+/* ---------- vistas ---------- */
+var app = document.getElementById('app');
+function etiqueta(e) { return '<span class="etiqueta ' + (e.k === 'venc' || e.k === 'pronto' ? e.k : '') + '">' + esc(e.txt) + '</span>'; }
+function filaTarea(o) {
+  return '<a class="item" href="#/mant/' + esc(o.t.id) + '"><span class="punto ' + o.e.k + '"></span><span class="cuerpo"><span class="t">' + esc(o.t.nombre) + '</span><br><span class="s">' + esc(o.e.txt) + '</span></span></a>';
+}
+function resumenChecklist(k) { var l = S.checklists[k], n = l.filter(function (x) { return S.marcas[k][x.id]; }).length; return { hechos: n, total: l.length }; }
+
+function vistaInicio() {
+  var c = S.contadores, ult = S.salidas.length ? S.salidas.slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; })[0] : null;
+  var ta = tareasOrdenadas().filter(function (o) { return o.e.k === 'venc' || o.e.k === 'pronto'; });
+  var a = resumenChecklist('antes'), d = resumenChecklist('despues');
+  var h = bloqueProxima() + '<section class="bloque"><div class="tablero"><div><b>' + fmt(c.salidas) + '</b><span>salidas</span></div><div><b>' + fmt(c.km) + '</b><span>km</span></div><div><b>' + fmt(c.horas) + '</b><span>horas de motor</span></div></div></section>';
+  h += '<section class="bloque"><a class="btn principal lleno" href="#/salida/nueva">Nueva salida</a><div class="fila-btn" style="margin-top:10px"><a class="btn chico" href="#/checklist/antes">Antes de salir<br>' + a.hechos + ' de ' + a.total + '</a><a class="btn chico" href="#/checklist/despues">Al volver<br>' + d.hechos + ' de ' + d.total + '</a></div></section>';
+  h += '<section class="bloque"><h3>Mantenimiento</h3>';
+  if (!S.tareas.length) h += '<div class="vacio"><p>Todavía no cargaste tareas. Anotá lo que hay que hacerle al auto y la app te avisa cuándo toca.</p><a class="btn" href="#/mant">Cargar tareas</a></div>';
+  else if (!ta.length) h += '<div class="cartel">Todo al día.</div>' + (S.tareas.some(function (t) { return estadoTarea(t).k === 'sin'; }) ? '<p class="ayuda" style="margin-top:8px">Hay tareas a las que les falta cargar el plazo.</p>' : '');
+  else h += '<div class="lista">' + ta.slice(0, 6).map(filaTarea).join('') + '</div>';
+  h += '</section>';
+  h += '<section class="bloque"><h3>Última salida</h3>';
+  if (!ult) h += '<div class="vacio"><p>Cuando guardes tu primera salida la vas a ver acá.</p></div>';
+  else h += '<div class="lista"><a class="item" href="#/salida/' + esc(ult.id) + '"><span class="cuerpo"><span class="t">' + esc(ult.pista || 'Sin pista') + ' el ' + fechaCorta(ult.fecha) + '</span><br><span class="s">' + esc(ult.tipo || '') + (ult.mejor ? (ult.tipo ? '. ' : '') + 'Mejor vuelta ' + esc(ult.mejor) : '') + '</span></span></a></div>';
+  return h + '</section>';
+}
+
+function vistaChecklist(k) {
+  if (k !== 'antes' && k !== 'despues') k = 'antes';
+  var l = S.checklists[k], r = resumenChecklist(k), editando = !!vistaChecklist.edit;
+  var h = '<nav class="segmento" aria-label="Qué lista"><a href="#/checklist/antes" ' + (k === 'antes' ? 'aria-current="true"' : '') + '>Antes de salir</a><a href="#/checklist/despues" ' + (k === 'despues' ? 'aria-current="true"' : '') + '>Al volver</a></nav>';
+  h += '<section class="bloque"><div class="progreso" aria-hidden="true"><i id="barra" style="width:' + (r.total ? Math.round(r.hechos / r.total * 100) : 0) + '%"></i></div><p id="conteo" class="ayuda">' + r.hechos + ' de ' + r.total + ' hechos</p>';
+  h += '<div id="listo" class="cartel ' + (r.total && r.hechos === r.total ? '' : 'oculto') + '">' + (k === 'antes' ? 'Todo listo para salir.' : 'Todo revisado.') + '</div></section>';
+  if (!l.length && !editando) h += '<div class="vacio"><p>Esta lista está vacía. Tocá «Editar lista» para agregar lo que revisás.</p></div>';
+  h += '<div class="lista" id="lista" style="margin-top:14px">';
+  if (editando) {
+    h += l.map(function (x, i) { return '<div class="editor" data-id="' + esc(x.id) + '"><input type="text" value="' + esc(x.t) + '" maxlength="120" aria-label="Texto del punto" data-edit="' + esc(x.id) + '"><button class="mini" data-subir="' + esc(x.id) + '" aria-label="Subir"' + (i === 0 ? ' disabled' : '') + '>↑</button><button class="mini" data-bajar="' + esc(x.id) + '" aria-label="Bajar"' + (i === l.length - 1 ? ' disabled' : '') + '>↓</button><button class="mini" data-borrar="' + esc(x.id) + '" aria-label="Borrar" style="color:var(--rojo)">✕</button></div>'; }).join('');
+    h += '<div class="editor"><input type="text" id="nuevoPunto" placeholder="Agregar un punto" maxlength="120"><button class="btn chico principal" id="agregarPunto">Agregar</button></div>';
+  } else {
+    h += l.map(function (x) { var on = !!S.marcas[k][x.id]; return '<button class="tilde" role="checkbox" aria-checked="' + on + '" data-tilde="' + esc(x.id) + '"><span class="caja">' + SVG_TILDE + '</span><span class="texto">' + esc(x.t) + '</span></button>'; }).join('');
+  }
+  h += '</div><div class="acciones">' + (editando ? '<button class="btn principal" id="terminarEdicion">Listo</button>' : '<button class="btn chico" id="limpiar">Limpiar tildes</button><button class="btn chico" id="editarLista">Editar lista</button>') + '</div>';
+  return h;
+}
+
+function datalistPistas() {
+  var u = {}; S.salidas.forEach(function (s) { if (s.pista) u[s.pista] = 1; }); S.fechas.forEach(function (f) { if (f.pista) u[f.pista] = 1; });
+  return '<datalist id="pistas">' + Object.keys(u).map(function (p) { return '<option value="' + esc(p) + '">'; }).join('') + '</datalist>';
+}
+function dictado(id, rot, valor) {
+  return '<div class="campo"><label for="' + id + '">' + rot + '</label><div class="dictado"><textarea id="' + id + '" maxlength="1200">' + esc(valor || '') + '</textarea><button type="button" class="mic oculto" data-mic="' + id + '" aria-label="Dictar con la voz">' + SVG_MIC + '</button></div></div>';
+}
+function vistaSalidaForm(s, pre) {
+  var nueva = !s; pre = pre || null; s = s || { fecha: (pre && pre.fecha) || hoyISO(), pista: pre ? pre.pista : '', tipo: pre ? pre.tipo : '', presiones: {} };
+  var p = s.presiones || {}, u = esc(S.unidadPresion);
+  function rueda(k, nombre) { var x = p[k] || {}; return '<div class="rueda"><div class="rotulo">' + nombre + '</div><div class="par"><div><input type="number" inputmode="decimal" step="any" id="p_' + k + '_f" value="' + esc(x.frio == null ? '' : x.frio) + '" aria-label="' + nombre + ' en frío"><small>en frío</small></div><div><input type="number" inputmode="decimal" step="any" id="p_' + k + '_c" value="' + esc(x.caliente == null ? '' : x.caliente) + '" aria-label="' + nombre + ' en caliente"><small>en caliente</small></div></div></div>'; }
+  function opciones(lista, v) { return '<option value=""></option>' + lista.map(function (o) { return '<option' + (o === v ? ' selected' : '') + '>' + o + '</option>'; }).join(''); }
+  var h = '<h2>' + (nueva ? 'Nueva salida' : 'Editar salida') + '</h2>';
+  if (nueva) { var a = resumenChecklist('antes'), d = resumenChecklist('despues'); h += '<p class="ayuda sub">Checklist de antes: ' + a.hechos + ' de ' + a.total + '. Al volver: ' + d.hechos + ' de ' + d.total + '.</p>'; }
+  if (nueva && pre) h += '<p class="cartel">Es la salida de «' + esc(pre.nombre) + '». Ya vienen la pista, el día y el tipo.</p>';
+  h += '<form id="formSalida" novalidate>' + datalistPistas();
+  h += '<div class="campo"><label for="f_fecha">Fecha</label><input type="date" id="f_fecha" value="' + esc(s.fecha) + '" required></div>';
+  h += '<div class="campo"><label for="f_pista">Pista</label><input type="text" id="f_pista" list="pistas" autocomplete="off" value="' + esc(s.pista || '') + '" maxlength="60"></div>';
+  h += '<div class="par"><div class="campo"><label for="f_tipo">Tipo</label><select id="f_tipo">' + opciones(['Entrenamiento', 'Clasificación', 'Carrera', 'Prueba'], s.tipo) + '</select></div><div class="campo"><label for="f_clima">Clima</label><select id="f_clima">' + opciones(['Soleado', 'Nublado', 'Pista húmeda', 'Lluvia'], s.clima) + '</select></div></div>';
+  h += '<div class="par"><div class="campo"><label for="f_tamb">Temp. ambiente (°C)</label><input type="number" inputmode="decimal" step="any" id="f_tamb" value="' + esc(s.tAmb == null ? '' : s.tAmb) + '"></div><div class="campo"><label for="f_tpista">Temp. pista (°C)</label><input type="number" inputmode="decimal" step="any" id="f_tpista" value="' + esc(s.tPista == null ? '' : s.tPista) + '"></div></div>';
+  h += '<div class="campo"><div class="rotulo">Presiones de los neumáticos (' + u + ')</div><div class="cuatro">' + rueda('di', 'Delantera izquierda') + rueda('dd', 'Delantera derecha') + rueda('ti', 'Trasera izquierda') + rueda('td', 'Trasera derecha') + '</div></div>';
+  h += dictado('f_reglajes', 'Reglajes y cambios', s.reglajes);
+  h += '<div class="par"><div class="campo"><label for="f_mejor">Mejor vuelta</label><input type="text" id="f_mejor" inputmode="decimal" placeholder="1:23.456" value="' + esc(s.mejor || '') + '" maxlength="12"></div><div class="campo"><label for="f_vueltas">Vueltas</label><input type="number" inputmode="numeric" id="f_vueltas" min="0" value="' + esc(s.vueltas == null ? '' : s.vueltas) + '"></div></div>';
+  h += '<div class="par"><div class="campo"><label for="f_km">Km de la salida</label><input type="number" inputmode="decimal" step="any" min="0" id="f_km" value="' + esc(s.km == null ? '' : s.km) + '"></div><div class="campo"><label for="f_horas">Horas de motor</label><input type="number" inputmode="decimal" step="any" min="0" id="f_horas" value="' + esc(s.horas == null ? '' : s.horas) + '"></div></div>';
+  h += dictado('f_notas', 'Notas y sensaciones', s.notas);
+  h += '<p id="errSalida" class="aviso oculto" role="alert"></p>';
+  h += '<div class="acciones"><button type="submit" class="btn principal" style="flex:1">' + (nueva ? 'Guardar salida' : 'Guardar cambios') + '</button><a class="btn" href="#/' + (nueva ? 'inicio' : 'salida/' + esc(s.id)) + '">Cancelar</a></div></form>';
+  return h;
+}
+
+function mejorDeLaPista(pista, salvoId) {
+  var mejor = null; S.salidas.forEach(function (s) { if (s.id !== salvoId && s.pista && pista && s.pista.toLowerCase() === pista.toLowerCase()) { var t = parseTiempo(s.mejor); if (t && (mejor == null || t < mejor)) mejor = t; } });
+  return mejor;
+}
+function vistaSalidas() {
+  var l = S.salidas.slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (a.creada < b.creada ? 1 : -1); });
+  var h = '<a class="btn principal lleno" href="#/salida/nueva">Nueva salida</a><section class="bloque"><h3>Historial</h3>';
+  if (!l.length) h += '<div class="vacio"><p>Todavía no hay salidas. Cada salida que guardes queda acá, con sus presiones, reglajes y tiempos.</p></div>';
+  else h += '<div class="lista">' + l.map(function (s) { return '<a class="item" href="#/salida/' + esc(s.id) + '"><span class="cuerpo"><span class="t">' + esc(s.pista || 'Sin pista') + ' el ' + fechaCorta(s.fecha) + '</span><br><span class="s">' + esc([s.tipo, s.mejor ? 'Mejor vuelta ' + s.mejor : ''].filter(Boolean).join('. ')) + '</span></span></a>'; }).join('') + '</div>';
+  return h + '</section>';
+}
+function textoSalida(s) {
+  var p = s.presiones || {}, u = S.unidadPresion, L = ['Salida del ' + fechaCorta(s.fecha) + (s.pista ? ' en ' + s.pista : ''), S.auto.nombre + (S.auto.categoria ? ' (' + S.auto.categoria + ')' : '')];
+  if (s.tipo) L.push('Tipo: ' + s.tipo); if (s.clima) L.push('Clima: ' + s.clima);
+  if (s.tAmb != null || s.tPista != null) L.push('Temperatura: ambiente ' + (s.tAmb == null ? '-' : fmt(s.tAmb) + '°') + ', pista ' + (s.tPista == null ? '-' : fmt(s.tPista) + '°'));
+  [['di', 'Del. izq.'], ['dd', 'Del. der.'], ['ti', 'Tras. izq.'], ['td', 'Tras. der.']].forEach(function (r) { var x = p[r[0]]; if (x && (x.frio != null || x.caliente != null)) L.push(r[1] + ': ' + (x.frio == null ? '-' : fmt(x.frio)) + ' frío, ' + (x.caliente == null ? '-' : fmt(x.caliente)) + ' caliente (' + u + ')'); });
+  if (s.reglajes) L.push('Reglajes: ' + s.reglajes); if (s.mejor) L.push('Mejor vuelta: ' + s.mejor); if (s.vueltas != null) L.push('Vueltas: ' + s.vueltas);
+  if (s.km != null) L.push('Km: ' + fmt(s.km)); if (s.horas != null) L.push('Horas de motor: ' + fmt(s.horas)); if (s.notas) L.push('Notas: ' + s.notas);
+  return L.join('\n');
+}
+function vistaSalida(id) {
+  var s = S.salidas.filter(function (x) { return x.id === id; })[0];
+  if (!s) return '<div class="vacio"><p>No encontré esa salida.</p><a class="btn" href="#/salidas">Volver al historial</a></div>';
+  var p = s.presiones || {}, u = esc(S.unidadPresion);
+  function dd(t, v) { return v == null || v === '' ? '' : '<dt>' + t + '</dt><dd>' + esc(v) + '</dd>'; }
+  function pr(k, n) { var x = p[k]; return x && (x.frio != null || x.caliente != null) ? '<dt>' + n + '</dt><dd>' + (x.frio == null ? '-' : fmt(x.frio)) + ' en frío, ' + (x.caliente == null ? '-' : fmt(x.caliente)) + ' en caliente (' + u + ')</dd>' : ''; }
+  var h = '<h2>' + esc(s.pista || 'Salida') + '</h2><p class="ayuda sub">' + fechaCorta(s.fecha) + '</p><div class="detalle"><dl>' + dd('Tanda', textoTandaDe(s)) + dd('Tipo', s.tipo) + dd('Clima', s.clima) + dd('Temperatura ambiente', s.tAmb == null ? '' : fmt(s.tAmb) + ' °C') + dd('Temperatura de pista', s.tPista == null ? '' : fmt(s.tPista) + ' °C') + pr('di', 'Delantera izquierda') + pr('dd', 'Delantera derecha') + pr('ti', 'Trasera izquierda') + pr('td', 'Trasera derecha') + dd('Reglajes y cambios', s.reglajes) + dd('Mejor vuelta', s.mejor) + dd('Vueltas', s.vueltas) + dd('Km de la salida', s.km == null ? '' : fmt(s.km)) + dd('Horas de motor', s.horas == null ? '' : fmt(s.horas)) + dd('Notas y sensaciones', s.notas) + (s.checks ? dd('Checklists', 'Antes ' + s.checks.antes.hechos + ' de ' + s.checks.antes.total + ', al volver ' + s.checks.despues.hechos + ' de ' + s.checks.despues.total) : '') + '</dl></div>';
+  h += '<div class="acciones"><a class="btn principal" href="https://wa.me/?text=' + encodeURIComponent(textoSalida(s)) + '" target="_blank" rel="noopener">Compartir por WhatsApp</a><a class="btn" href="#/salida/' + esc(s.id) + '/editar">Editar</a><button class="btn peligro" id="borrarSalida" data-id="' + esc(s.id) + '">Borrar</button></div><p style="margin-top:14px"><a href="#/salidas">Volver al historial</a></p>';
+  return h;
+}
+
+var EJEMPLOS = ['Cambio de aceite y filtro', 'Líquido de frenos', 'Pastillas y discos', 'Juego de neumáticos', 'Amortiguadores', 'Tren delantero', 'Bujías', 'Filtro de combustible', 'Cinturones de seguridad', 'Extintor', 'Casco'];
+function vistaMant() {
+  var o = tareasOrdenadas(), h = '<a class="btn principal lleno" href="#/mant/nueva">Agregar tarea</a>';
+  h += '<section class="bloque"><h3>Tareas</h3>';
+  if (!o.length) h += '<div class="vacio"><p>Acá cargás lo que hay que hacerle al auto y cada cuánto: por salidas, km, horas de motor, meses o una fecha de vencimiento.</p><p class="ayuda">Podés arrancar con una lista de ejemplo. Vienen sin plazo: los plazos los ponés vos, según tu preparador y el reglamento de tu categoría.</p><button class="btn" id="ejemplos">Cargar tareas de ejemplo</button></div>';
+  else h += '<div class="lista">' + o.map(filaTarea).join('') + '</div>';
+  return h + '</section>';
+}
+function vistaTareaForm(t) {
+  var nueva = !t; t = t || { tipo: 'salidas', nombre: '', cada: '', ultimo: S.contadores.salidas, ultima: hoyISO(), fecha: '', nota: '' };
+  var h = '<h2>' + (nueva ? 'Nueva tarea' : 'Editar tarea') + '</h2><form id="formTarea" novalidate>';
+  h += '<div class="campo"><label for="t_nombre">Qué hay que hacer</label><input type="text" id="t_nombre" maxlength="80" value="' + esc(t.nombre) + '" placeholder="Por ejemplo: cambio de aceite y filtro"></div>';
+  h += '<div class="campo"><label for="t_tipo">Cuándo toca</label><select id="t_tipo">' + Object.keys(TIPOS).map(function (k) { return '<option value="' + k + '"' + (k === t.tipo ? ' selected' : '') + '>' + TIPOS[k] + '</option>'; }).join('') + '</select></div>';
+  h += '<div class="campo" id="g_cada"><label for="t_cada" id="l_cada">Cada cuánto</label><input type="number" inputmode="decimal" step="any" min="0" id="t_cada" value="' + esc(t.cada == null ? '' : t.cada) + '"></div>';
+  h += '<div class="campo" id="g_ultimo"><label for="t_ultimo" id="l_ultimo">Se hizo por última vez cuando el contador marcaba</label><input type="number" inputmode="decimal" step="any" min="0" id="t_ultimo" value="' + esc(t.ultimo == null ? 0 : t.ultimo) + '"><p class="ayuda">Hoy el contador marca <b id="contadorHoy"></b>. Si la hiciste hace poco, dejá ese valor.</p></div>';
+  h += '<div class="campo" id="g_ultima"><label for="t_ultima">Se hizo por última vez el</label><input type="date" id="t_ultima" value="' + esc(t.ultima || '') + '"></div>';
+  h += '<div class="campo" id="g_fecha"><label for="t_fecha">Vence el</label><input type="date" id="t_fecha" value="' + esc(t.fecha || '') + '"></div>';
+  h += '<div class="campo"><label for="t_nota">Nota</label><input type="text" id="t_nota" maxlength="160" value="' + esc(t.nota || '') + '"></div>';
+  h += '<p id="errTarea" class="aviso oculto" role="alert"></p><div class="acciones"><button type="submit" class="btn principal" style="flex:1">Guardar</button><a class="btn" href="#/mant' + (nueva ? '' : '/' + esc(t.id)) + '">Cancelar</a></div></form>';
+  return h;
+}
+function vistaTarea(id) {
+  var t = S.tareas.filter(function (x) { return x.id === id; })[0];
+  if (!t) return '<div class="vacio"><p>No encontré esa tarea.</p><a class="btn" href="#/mant">Volver a mantenimiento</a></div>';
+  var e = estadoTarea(t), hist = '';
+  if (t.tipo === 'meses' && t.ultima) hist = '<dt>Última vez</dt><dd>' + fechaCorta(t.ultima) + '</dd>';
+  else if (UNIDAD[t.tipo]) hist = '<dt>Última vez</dt><dd>Cuando el contador marcaba ' + fmt(t.ultimo || 0) + (t.ultima ? ' (' + fechaCorta(t.ultima) + ')' : '') + '</dd>';
+  var h = '<h2>' + esc(t.nombre) + '</h2><p class="sub">' + etiqueta(e) + '</p><div class="detalle"><dl><dt>Plazo</dt><dd>' + esc(descripcionPlazo(t)) + (t.tipo === 'fijo' && t.fecha ? ' (' + fechaCorta(t.fecha) + ')' : '') + '</dd>' + hist + (t.nota ? '<dt>Nota</dt><dd>' + esc(t.nota) + '</dd>' : '') + '</dl></div>';
+  h += '<div id="hecha"></div><div class="acciones"><button class="btn principal" id="marcarHecha" data-id="' + esc(t.id) + '">Ya la hice</button><a class="btn" href="#/mant/' + esc(t.id) + '/editar">Editar</a><button class="btn peligro" id="borrarTarea" data-id="' + esc(t.id) + '">Borrar</button></div><p style="margin-top:14px"><a href="#/mant">Volver a mantenimiento</a></p>';
+  return h;
+}
+
+function vistaAjustes() {
+  var c = S.contadores;
+  var h = '<h2>Ajustes</h2>';
+  if (!almacenOK) h += '<p class="aviso">Este navegador no deja guardar los datos: se van a perder al cerrar la página.</p>';
+  h += '<form id="formAjustes" novalidate>';
+  h += '<div class="par"><div class="campo"><label for="a_nombre">Auto</label><input type="text" id="a_nombre" maxlength="40" value="' + esc(S.auto.nombre) + '"></div><div class="campo"><label for="a_cat">Categoría</label><input type="text" id="a_cat" maxlength="40" value="' + esc(S.auto.categoria) + '"></div></div>';
+  h += '<div class="campo"><label for="a_unidad">Unidad de las presiones</label><select id="a_unidad">' + ['psi', 'bar', 'kg/cm²'].map(function (u) { return '<option' + (u === S.unidadPresion ? ' selected' : '') + '>' + u + '</option>'; }).join('') + '</select></div>';
+  h += '<div class="campo"><div class="rotulo">Contadores</div><div class="par"><div><input type="number" inputmode="decimal" step="any" min="0" id="a_salidas" value="' + esc(c.salidas) + '" aria-label="Salidas"><small class="ayuda">salidas</small></div><div><input type="number" inputmode="decimal" step="any" min="0" id="a_km" value="' + esc(c.km) + '" aria-label="Km"><small class="ayuda">km</small></div></div><div style="margin-top:10px"><input type="number" inputmode="decimal" step="any" min="0" id="a_horas" value="' + esc(c.horas) + '" aria-label="Horas de motor"><small class="ayuda">horas de motor</small></div><p class="ayuda" style="margin-top:6px">Las salidas, los km y las horas se suman solos cada vez que guardás una salida. Acá los corregís.</p></div>';
+  h += '<div class="par"><div class="campo"><label for="a_pct">Avisar desde el (%) del plazo</label><input type="number" inputmode="numeric" min="1" max="99" id="a_pct" value="' + esc(S.avisoPct) + '"></div><div class="campo"><label for="a_dias">Avisar con (días) de anticipación</label><input type="number" inputmode="numeric" min="1" max="365" id="a_dias" value="' + esc(S.avisoDias) + '"></div></div>';
+  h += '<div class="campo"><label for="a_tema">Colores</label><select id="a_tema">' + [['auto', 'Según el celular'], ['light', 'Claro'], ['dark', 'Oscuro']].map(function (t) { return '<option value="' + t[0] + '"' + (t[0] === S.tema ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select></div>';
+  h += '<div class="acciones"><button type="submit" class="btn principal" style="flex:1">Guardar ajustes</button></div></form>';
+  h += '<section class="bloque"><h3>Copia de seguridad</h3><p class="ayuda sub">Tus datos están guardados en este celular. Si borrás los datos del navegador o cambiás de teléfono, se pierden. Copiá la copia de vez en cuando y guardala en tus notas o mandátela por WhatsApp.</p><div class="acciones"><button class="btn" id="copiar">Copiar copia</button></div><div class="campo oculto" id="cajaCopia"><label for="textoCopia">Seleccioná y copiá este texto</label><textarea id="textoCopia" readonly></textarea></div>';
+  h += '<div class="campo"><label for="pegar">Para restaurar, pegá acá la copia</label><textarea id="pegar" placeholder="Pegá el texto de la copia"></textarea></div><div class="acciones"><button class="btn" id="restaurar">Restaurar copia</button></div><p id="msgCopia" class="ayuda" style="margin-top:10px" role="status"></p></section>';
+  h += '<section class="bloque"><h3>Borrar todo</h3><p class="ayuda sub">Borra salidas, tareas, checklists y ajustes de este celular. No se puede deshacer.</p><button class="btn peligro" id="borrarTodo">Borrar todos los datos</button></section>';
+  return h;
+}
+
+/* ---------- fechas: fines de semana de carrera ---------- */
+var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+var TIPOS_TANDA = ['Prueba', 'Clasificación', 'Serie', 'Final', 'Otro'];
+function aISO(d) { return d.getFullYear() + '-' + z2(d.getMonth() + 1) + '-' + z2(d.getDate()); }
+function sumarDias(iso, n) { var d = aFecha(iso); d.setDate(d.getDate() + n); return aISO(d); }
+function nombreDia(iso) { var d = aFecha(iso), n = DIAS[d.getDay()]; return n.charAt(0).toUpperCase() + n.slice(1) + ' ' + z2(d.getDate()) + '/' + z2(d.getMonth() + 1); }
+function proximoSabado() { var d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7)); return aISO(d); }
+function tipoDeTanda(n) { n = String(n || ''); if (/clasif/i.test(n)) return 'Clasificación'; if (/serie|semi/i.test(n)) return 'Serie'; if (/final/i.test(n)) return 'Final'; if (/prueba|libre|ensayo|pr[aá]ctica|tanda/i.test(n)) return 'Prueba'; return 'Otro'; }
+function nuevaTanda(nombre, dia, hora, tipo) { return { id: uid(), nombre: nombre, tipo: tipo || tipoDeTanda(nombre), dia: dia || '', hora: hora || '', salidaId: '', hecha: false, resultado: { puesto: '', tiempo: '', nota: '' } }; }
+function armarFecha(pista, sabado, modo, pruebas) {
+  var ses = [];
+  if (modo === 'comun' || modo === 'doble') {
+    for (var i = 1; i <= pruebas; i++) ses.push(nuevaTanda('Prueba ' + i, sabado));
+    ses.push(nuevaTanda('Clasificación', sabado));
+    var dom = sumarDias(sabado, 1);
+    if (modo === 'doble') { ses.push(nuevaTanda('Final 1', dom)); ses.push(nuevaTanda('Final 2', dom)); }
+    else { ses.push(nuevaTanda('Serie', dom)); ses.push(nuevaTanda('Final', dom)); }
+  }
+  return { id: uid(), pista: pista, modo: modo, revisar: false, sesiones: ses };
+}
+function buscarFecha(id) { return S.fechas.filter(function (f) { return f.id === id; })[0]; }
+function ordenadas(f) {
+  return f.sesiones.map(function (t, i) { return { t: t, i: i }; }).sort(function (a, b) {
+    var da = a.t.dia || '9999', db = b.t.dia || '9999';
+    if (da !== db) return da < db ? -1 : 1;
+    if (a.t.hora && b.t.hora && a.t.hora !== b.t.hora) return a.t.hora < b.t.hora ? -1 : 1;
+    return a.i - b.i;
+  }).map(function (x) { return x.t; });
+}
+function rangoFecha(f) { var d = f.sesiones.map(function (t) { return t.dia; }).filter(Boolean).sort(); return { ini: d[0] || '', fin: d[d.length - 1] || '' }; }
+function rangoTexto(r) { if (!r.ini) return 'Sin días cargados'; return r.ini === r.fin ? nombreDia(r.ini) : nombreDia(r.ini) + ' al ' + nombreDia(r.fin); }
+function tieneResultado(t) { return !!(t.resultado && (t.resultado.puesto || t.resultado.tiempo)); }
+function hecha(t) { return !!(t.salidaId || t.hecha || tieneResultado(t)); }
+function estadoTanda(t) {
+  var r = t.resultado || {}, partes = [];
+  if (r.puesto) partes.push('Puesto ' + r.puesto);
+  if (r.tiempo) partes.push(r.tiempo);
+  if (partes.length) return partes.join('. ');
+  if (t.salidaId) return 'Salida cargada';
+  return t.hecha ? 'Hecha' : '';
+}
+function momentoTanda(t) { if (!t.dia) return null; var p = t.dia.split('-'), h = (t.hora || '23:59').split(':'); return new Date(+p[0], +p[1] - 1, +p[2], +h[0], +h[1]); }
+function proximaTanda() {
+  var ahora = new Date(), mejor = null;
+  S.fechas.forEach(function (f) { f.sesiones.forEach(function (t) { if (hecha(t)) return; var m = momentoTanda(t); if (!m || m < ahora) return; if (!mejor || m < mejor.m) mejor = { f: f, t: t, m: m }; }); });
+  return mejor;
+}
+function faltaTexto(m) {
+  var ms = m - new Date(); if (ms <= 0) return 'Ahora';
+  var min = Math.round(ms / 60000); if (min < 1) return 'Menos de 1 min';
+  if (min < 60) return 'Faltan ' + min + ' min';
+  var h = Math.floor(min / 60), mm = min % 60;
+  if (h < 24) return 'Faltan ' + h + ' h' + (mm ? ' ' + mm + ' min' : '');
+  var d = Math.floor(h / 24); return 'Faltan ' + d + ' ' + plural(d, 'día', 'días');
+}
+function cuandoTexto(t) { var hoy = hoyISO(), dia = t.dia === hoy ? 'Hoy' : t.dia === sumarDias(hoy, 1) ? 'Mañana' : nombreDia(t.dia); return dia + (t.hora ? ' a las ' + t.hora : ''); }
+function bloqueProxima() {
+  var p = proximaTanda(); if (!p) return '';
+  return '<section class="bloque"><a class="proxima" href="#/fecha/' + esc(p.f.id) + '/tanda/' + esc(p.t.id) + '"><span class="que">Próxima tanda</span><span class="cuando" id="faltaProxima" data-m="' + p.m.getTime() + '">' + esc(faltaTexto(p.m)) + '</span><span class="que">' + esc(p.t.nombre) + (p.f.pista ? ' en ' + esc(p.f.pista) : '') + '. ' + esc(cuandoTexto(p.t)) + '</span></a></section>';
+}
+var timerProx = null;
+function cuentaRegresiva() {
+  clearInterval(timerProx);
+  var el = document.getElementById('faltaProxima'); if (!el) return;
+  timerProx = setInterval(function () { var e = document.getElementById('faltaProxima'); if (!e) { clearInterval(timerProx); return; } e.textContent = faltaTexto(new Date(+e.getAttribute('data-m'))); }, 20000);
+}
+function textoFecha(f) {
+  var L = ['Fecha en ' + (f.pista || 'la pista'), S.auto.nombre + (S.auto.categoria ? ' (' + S.auto.categoria + ')' : '')], dia = null;
+  ordenadas(f).forEach(function (t) {
+    if (t.dia !== dia) { dia = t.dia; L.push(''); L.push(t.dia ? nombreDia(t.dia) : 'Sin día'); }
+    L.push((t.hora ? t.hora + ' ' : '') + t.nombre + (t.resultado && t.resultado.puesto ? '. Puesto ' + t.resultado.puesto : ''));
+  });
+  return L.join('\n');
+}
+function filaTanda(f, t) {
+  var e = estadoTanda(t);
+  return '<a class="item" href="#/fecha/' + esc(f.id) + '/tanda/' + esc(t.id) + '"><span class="hora' + (t.hora ? '' : ' sin') + '">' + (t.hora ? esc(t.hora) : 'Sin hora') + '</span><span class="cuerpo"><span class="t">' + esc(t.nombre) + '</span>' + (e ? '<br><span class="s">' + esc(e) + '</span>' : '') + '</span></a>';
+}
+function vistaFechas() {
+  var h = '<a class="btn principal lleno" href="#/fecha/nueva">Nueva fecha</a><section class="bloque"><h3>Fines de semana de carrera</h3>';
+  if (!S.fechas.length) h += '<div class="vacio"><p>Cargá el programa de cada fecha: pruebas, clasificación, serie y final, con sus horarios. Cada tanda se convierte en una salida lista para completar, y la próxima te aparece en Inicio.</p></div>';
+  else {
+    var hoy = hoyISO(), l = S.fechas.map(function (f) { return { f: f, r: rangoFecha(f) }; });
+    var prox = l.filter(function (x) { return !x.r.fin || x.r.fin >= hoy; }).sort(function (a, b) { return (a.r.ini || '9999') < (b.r.ini || '9999') ? -1 : 1; });
+    var pas = l.filter(function (x) { return x.r.fin && x.r.fin < hoy; }).sort(function (a, b) { return a.r.fin < b.r.fin ? 1 : -1; });
+    h += '<div class="lista">' + prox.concat(pas).map(function (x) {
+      var tot = x.f.sesiones.length, n = x.f.sesiones.filter(hecha).length;
+      return '<a class="item" href="#/fecha/' + esc(x.f.id) + '"><span class="cuerpo"><span class="t">' + esc(x.f.pista || 'Sin pista') + '</span><br><span class="s">' + esc(rangoTexto(x.r)) + (tot ? '. ' + n + ' de ' + tot + ' tandas hechas' : '. Sin tandas') + '</span></span></a>';
+    }).join('') + '</div>';
+  }
+  return h + '</section>';
+}
+function vistaFechaNueva() {
+  var u = {}; S.fechas.forEach(function (f) { if (f.pista) u[f.pista] = 1; }); S.salidas.forEach(function (x) { if (x.pista) u[x.pista] = 1; });
+  var h = '<h2>Nueva fecha</h2>';
+  h += '<section class="bloque oculto" id="bloqueIA"><h3>Cargar desde el programa</h3><p class="ayuda sub">Sacale una foto al programa del organizador, o una captura de pantalla si viene en PDF. Claude lo lee con tu cuenta y vos revisás los horarios antes de usarlos.</p><input type="file" id="fotosPrograma" accept="image/*" multiple aria-label="Foto o captura del programa"><div class="acciones"><button class="btn principal" id="leerPrograma" type="button">Leer el programa</button><button class="btn oculto" id="detenerIA" type="button">Detener</button></div><p id="estadoIA" class="ayuda" style="margin-top:10px" role="status"></p></section>';
+  h += '<section class="bloque"><h3>Armar a mano</h3><form id="formFecha" novalidate><datalist id="pistasF">' + Object.keys(u).map(function (p) { return '<option value="' + esc(p) + '">'; }).join('') + '</datalist>';
+  h += '<div class="campo"><label for="fe_pista">Pista</label><input type="text" id="fe_pista" list="pistasF" maxlength="60" autocomplete="off"></div>';
+  h += '<div class="campo"><label for="fe_modo">Cómo es el fin de semana</label><select id="fe_modo"><option value="comun">Común (con serie y final)</option><option value="doble">Fecha doble (dos finales)</option><option value="blanco">En blanco</option></select></div>';
+  h += '<div class="par"><div class="campo"><label for="fe_sabado">Sábado</label><input type="date" id="fe_sabado" value="' + proximoSabado() + '"></div><div class="campo" id="g_pruebas"><label for="fe_pruebas">Pruebas del sábado</label><select id="fe_pruebas"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div></div>';
+  h += '<p class="ayuda" style="margin-top:8px">Común: el sábado, las pruebas y la clasificación; el domingo, la serie y la final. Doble: una sola clasificación y dos finales. En blanco: cargás vos las tandas. Después ponés la hora de cada una y podés agregar o borrar las que haga falta.</p><p id="errFecha" class="aviso oculto" role="alert"></p>';
+  h += '<div class="acciones"><button type="submit" class="btn principal" style="flex:1">Armar fin de semana</button><a class="btn" href="#/fechas">Cancelar</a></div></form></section>';
+  return h;
+}
+function vistaFecha(id) {
+  var f = buscarFecha(id);
+  if (!f) return '<div class="vacio"><p>No encontré esa fecha.</p><a class="btn" href="#/fechas">Volver a fechas</a></div>';
+  var h = '<h2>' + esc(f.pista || 'Fecha de carrera') + '</h2><p class="ayuda sub">' + esc(rangoTexto(rangoFecha(f))) + '</p>';
+  if (f.revisar) h += '<p class="aviso">Este programa lo leyó la inteligencia artificial y puede tener errores. Revisá cada horario y, cuando esté bien, tocá «Ya lo revisé».</p><div class="acciones" style="margin:-6px 0 14px"><button class="btn chico" id="yaRevisado">Ya lo revisé</button></div>';
+  var ord = ordenadas(f), dia = null;
+  if (!ord.length) h += '<div class="vacio"><p>Esta fecha todavía no tiene tandas.</p></div>';
+  else {
+    ord.forEach(function (t) {
+      if (t.dia !== dia) { if (dia !== null) h += '</div>'; dia = t.dia; h += '<h3 class="dia-titulo">' + esc(t.dia ? nombreDia(t.dia) : 'Sin día') + '</h3><div class="lista">'; }
+      h += filaTanda(f, t);
+    });
+    h += '</div>';
+  }
+  h += '<div class="acciones"><a class="btn principal" href="#/fecha/' + esc(f.id) + '/tanda/nueva">Agregar tanda</a><a class="btn" href="https://wa.me/?text=' + encodeURIComponent(textoFecha(f)) + '" target="_blank" rel="noopener">Compartir por WhatsApp</a></div>';
+  h += '<div class="acciones"><button class="btn chico peligro" id="borrarFecha" data-id="' + esc(f.id) + '">Borrar esta fecha</button></div><p style="margin-top:14px"><a href="#/fechas">Volver a fechas</a></p>';
+  return h;
+}
+function vistaTanda(fid, sid) {
+  var f = buscarFecha(fid);
+  if (!f) return '<div class="vacio"><p>No encontré esa fecha.</p><a class="btn" href="#/fechas">Volver a fechas</a></div>';
+  var nueva = sid === 'nueva', t = nueva ? null : f.sesiones.filter(function (x) { return x.id === sid; })[0];
+  if (!nueva && !t) return '<div class="vacio"><p>No encontré esa tanda.</p><a class="btn" href="#/fecha/' + esc(f.id) + '">Volver a la fecha</a></div>';
+  var ult = ordenadas(f).slice(-1)[0], d = t || { nombre: '', tipo: 'Prueba', dia: ult ? ult.dia : proximoSabado(), hora: '', resultado: {} }, r = d.resultado || {};
+  var h = '<h2>' + (nueva ? 'Nueva tanda' : esc(d.nombre)) + '</h2>' + (nueva ? '' : '<p class="ayuda sub">' + esc(f.pista || '') + (d.dia ? (f.pista ? '. ' : '') + esc(nombreDia(d.dia)) : '') + '</p>');
+  if (!nueva) {
+    h += '<div class="acciones" style="margin-top:0">' + (d.salidaId ? '<a class="btn principal" href="#/salida/' + esc(d.salidaId) + '">Ver la salida de esta tanda</a>' : '<a class="btn principal" href="#/salida/nueva?fecha=' + esc(f.id) + '&tanda=' + esc(d.id) + '">Cargar la salida de esta tanda</a>') + '<a class="btn chico" href="#/checklist/antes">Checklist de antes</a><a class="btn chico" href="#/checklist/despues">Al volver</a></div>';
+  }
+  h += '<form id="formTanda" novalidate><div class="campo"><label for="ta_nombre">Nombre</label><input type="text" id="ta_nombre" maxlength="40" value="' + esc(d.nombre) + '" placeholder="Por ejemplo: Prueba 2"></div>';
+  h += '<div class="campo"><label for="ta_tipo">Tipo</label><select id="ta_tipo">' + TIPOS_TANDA.map(function (x) { return '<option' + (x === d.tipo ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div>';
+  h += '<div class="par"><div class="campo"><label for="ta_dia">Día</label><input type="date" id="ta_dia" value="' + esc(d.dia || '') + '"></div><div class="campo"><label for="ta_hora">Hora</label><input type="time" id="ta_hora" value="' + esc(d.hora || '') + '"></div></div>';
+  h += '<p id="errTanda" class="aviso oculto" role="alert"></p><div class="acciones"><button type="submit" class="btn principal" style="flex:1">' + (nueva ? 'Agregar tanda' : 'Guardar tanda') + '</button></div></form>';
+  if (!nueva) {
+    h += '<section class="bloque"><h3>Resultado</h3><p class="ayuda sub">Para series y finales, o la clasificación. En «tiempo» poné lo que quieras: mejor vuelta o tiempo de carrera.</p><form id="formResultado" novalidate><div class="par"><div class="campo"><label for="re_puesto">Puesto</label><input type="text" id="re_puesto" maxlength="12" value="' + esc(r.puesto || '') + '" placeholder="3"></div><div class="campo"><label for="re_tiempo">Tiempo</label><input type="text" id="re_tiempo" maxlength="14" value="' + esc(r.tiempo || '') + '" placeholder="1:21.340"></div></div><div class="campo"><label for="re_nota">Nota</label><input type="text" id="re_nota" maxlength="120" value="' + esc(r.nota || '') + '"></div><div class="acciones"><button type="submit" class="btn">Guardar resultado</button></div></form></section>';
+    var auto = !!(d.salidaId || tieneResultado(d));
+    h += '<div class="acciones">' + (auto ? '<span class="etiqueta">Tanda hecha</span>' : '<button class="btn chico" id="alternarHecha">' + (d.hecha ? 'Desmarcar como hecha' : 'Marcar como hecha') + '</button>') + '<button class="btn chico peligro" id="borrarTanda">Borrar tanda</button></div>';
+  }
+  return h + '<p style="margin-top:14px"><a href="#/fecha/' + esc(f.id) + '">Volver a la fecha</a></p>';
+}
+function preSalida() {
+  var q = new URLSearchParams(consultaHash()), f = buscarFecha(q.get('fecha') || ''), t = f && f.sesiones.filter(function (x) { return x.id === q.get('tanda'); })[0];
+  salidaPre = null; if (!t) return null;
+  var tipo = { 'Prueba': 'Entrenamiento', 'Clasificación': 'Clasificación', 'Serie': 'Carrera', 'Final': 'Carrera' }[t.tipo] || '';
+  salidaPre = { fid: f.id, sid: t.id, nombre: t.nombre + (f.pista ? ' en ' + f.pista : ''), fecha: t.dia || hoyISO(), pista: f.pista || '', tipo: tipo };
+  return salidaPre;
+}
+function textoTandaDe(x) {
+  var f = x.fechaId && buscarFecha(x.fechaId), t = f && f.sesiones.filter(function (y) { return y.id === x.sesionId; })[0];
+  return t ? t.nombre + (f.pista ? ' en ' + f.pista : '') : '';
+}
+var salidaPre = null;
+
+/* ---------- leer el programa de una foto (Claude) ---------- */
+var ia = { sample: null, max: 1, tipos: [], ctl: null };
+async function prepararIA() {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    var s = await window.claude.use('sample'); if (!s) return;
+    var lim = await s.limits(); if (!lim || !lim.images) return;
+    ia.sample = s; ia.max = lim.images.maxCount || 1; ia.tipos = lim.images.mediaTypes || [];
+  } catch (e) { ia.sample = null; }
+}
+function promptPrograma() {
+  var cat = (S.auto.categoria || 'TC Regional').replace(/["«»]/g, '');
+  return 'Te paso la foto o la captura del programa horario de una fecha de automovilismo en Argentina. Hoy es ' + hoyISO() + '.\n' +
+    'Extraé únicamente las tandas de la categoría «' + cat + '» (si el programa la nombra parecido, usá ese nombre). Ignorá las demás categorías.\n' +
+    'Respondé SOLO con un JSON, sin texto antes ni después, con esta forma:\n' +
+    '{"pista": "nombre de la pista o autódromo, o vacío si no aparece", "sesiones": [{"dia": "AAAA-MM-DD", "hora": "HH:MM", "nombre": "Prueba 1", "tipo": "Prueba"}], "aviso": ""}\n' +
+    'Reglas:\n- "tipo" es uno de estos: Prueba, Clasificación, Serie, Final, Otro.\n' +
+    '- "hora" va en formato de 24 horas HH:MM. Si el programa no trae la hora de esa tanda, dejá "" y no la inventes.\n' +
+    '- "dia": si el programa no trae el año, usá el año más cercano a hoy.\n' +
+    '- "nombre": corto, como figura en el programa (por ejemplo Prueba libre 1, Clasificación, Serie, Final 1).\n' +
+    '- No agregues tandas que no estén en el programa.\n' +
+    '- Si no encontrás la categoría o no se puede leer, devolvé "sesiones": [] y explicá el motivo en "aviso", en una frase.';
+}
+function interpretarPrograma(d) {
+  var out = { pista: '', sesiones: [], aviso: '' };
+  if (!d || typeof d !== 'object') return out;
+  out.pista = String(d.pista || '').trim().slice(0, 60); out.aviso = String(d.aviso || '').trim().slice(0, 200);
+  (Array.isArray(d.sesiones) ? d.sesiones : []).slice(0, 40).forEach(function (x) {
+    if (!x || typeof x !== 'object') return;
+    var dia = String(x.dia || ''), nombre = String(x.nombre || '').trim().slice(0, 40);
+    if (!nombre || !/^\d{4}-\d{2}-\d{2}$/.test(dia) || aISO(aFecha(dia)) !== dia) return;
+    var hora = String(x.hora || ''); if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) hora = '';
+    out.sesiones.push(nuevaTanda(nombre, dia, hora, TIPOS_TANDA.indexOf(x.tipo) >= 0 ? x.tipo : tipoDeTanda(nombre)));
+  });
+  return out;
+}
+function mensajeErrorIA(e) {
+  var c = e && e.code;
+  if (c === 'cancelled') return 'Lo detuviste.';
+  if (c === 'not_granted') return 'Para leer el programa tenés que permitir que esta página use tu cuenta de Claude.';
+  if (c === 'rate_limited') return 'Hiciste muchos pedidos seguidos. Esperá un momento y probá de nuevo.';
+  if (c === 'image_rejected' || c === 'images_unavailable') return 'Esa imagen no se pudo usar. Probá con una foto o una captura más chica.';
+  if (c === 'invalid_json') return 'No pude armar el cronograma con esa imagen. Probá con una foto más cerca y derecha, o armalo a mano.';
+  return 'No pude leer el programa ahora. Probá de nuevo o armalo a mano.';
+}
+async function leerPrograma() {
+  var q = function (id) { return document.getElementById(id); }, inp = q('fotosPrograma'), est = q('estadoIA');
+  var files = Array.prototype.slice.call(inp.files || []);
+  if (!files.length) { est.textContent = 'Elegí primero la foto o la captura del programa.'; return; }
+  if (files.length > ia.max) { est.textContent = 'Podés mandar hasta ' + ia.max + ' ' + plural(ia.max, 'imagen', 'imágenes') + ' por vez.'; return; }
+  ia.ctl = new AbortController(); q('leerPrograma').disabled = true; q('detenerIA').classList.remove('oculto');
+  est.textContent = 'Leyendo el programa… puede tardar hasta un minuto.';
+  try {
+    var res = interpretarPrograma(await ia.sample.json(promptPrograma(), { images: files, signal: ia.ctl.signal, cache: false }));
+    if (!res.sesiones.length) { est.textContent = res.aviso || 'No encontré tandas de tu categoría en esa imagen. Probá con una foto más cerca o armalo a mano.'; return; }
+    var f = { id: uid(), pista: res.pista, modo: 'foto', revisar: true, sesiones: res.sesiones };
+    S.fechas.push(f); guardar(); location.hash = '#/fecha/' + f.id; aviso('Programa cargado: revisá los horarios');
+  } catch (e) { if (q('estadoIA')) q('estadoIA').textContent = mensajeErrorIA(e); }
+  finally { if (q('leerPrograma')) { q('leerPrograma').disabled = false; q('detenerIA').classList.add('oculto'); } }
+}
+function consultaHash() { var h = location.hash || ''; var i = h.indexOf('?'); return i < 0 ? '' : h.slice(i + 1); }
+
+/* ---------- ventana de confirmación y avisos ---------- */
+var capas = document.getElementById('capas');
+function preguntar(texto, si, peligro) {
+  return new Promise(function (res) {
+    capas.innerHTML = '<div class="velo" role="dialog" aria-modal="true"><div class="ventana"><p>' + esc(texto) + '</p><div class="acciones"><button class="btn" id="vNo">Cancelar</button><button class="btn ' + (peligro ? 'peligro' : 'principal') + '" id="vSi">' + esc(si) + '</button></div></div></div>';
+    var fin = function (v) { capas.innerHTML = ''; res(v); };
+    document.getElementById('vNo').onclick = function () { fin(false); };
+    document.getElementById('vSi').onclick = function () { fin(true); };
+    document.getElementById('vNo').focus();
+  });
+}
+var tToast;
+function aviso(t) { var d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.textContent = t; document.body.appendChild(d); clearTimeout(tToast); tToast = setTimeout(function () { d.remove(); }, 2600); }
+
+/* ---------- dictado por voz ---------- */
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition, grabando = null;
+function activarDictado() {
+  if (!SR) return;
+  Array.prototype.forEach.call(app.querySelectorAll('[data-mic]'), function (b) {
+    b.classList.remove('oculto');
+    b.onclick = function () {
+      var campo = document.getElementById(b.getAttribute('data-mic'));
+      if (grabando) { try { grabando.stop(); } catch (e) {} if (grabando._b === b) return; }
+      var r = new SR(); r.lang = 'es-AR'; r.interimResults = false; r.continuous = false; r._b = b;
+      r.onstart = function () { grabando = r; b.classList.add('on'); };
+      r.onresult = function (e) { var t = ''; for (var i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) t += e.results[i][0].transcript; t = t.trim(); if (!t) return; var v = campo.value; campo.value = (v ? v + (/\s$/.test(v) ? '' : ' ') : '') + (v ? t : t.charAt(0).toUpperCase() + t.slice(1)); };
+      r.onerror = function (e) { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') aviso('Para dictar, permití el micrófono para este sitio.'); else if (e.error === 'network') aviso('No hay conexión para dictar.'); };
+      r.onend = function () { b.classList.remove('on'); if (grabando === r) grabando = null; };
+      try { r.start(); } catch (e) { b.classList.remove('on'); }
+    };
+  });
+}
+
+/* ---------- enrutador ---------- */
+function ruta() { var h = (location.hash || '#/inicio').replace(/^#\/?/, '').split('?')[0].split('/'); return h; }
+function marcarTab(k) { Array.prototype.forEach.call(document.querySelectorAll('.barra a'), function (a) { if (a.getAttribute('data-tab') === k) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); }); }
+function aplicarTema() { if (S.tema === 'light' || S.tema === 'dark') document.documentElement.setAttribute('data-theme', S.tema); else document.documentElement.removeAttribute('data-theme'); }
+function cabecera() { document.getElementById('chapaNombre').textContent = S.auto.nombre || 'Mi auto'; var c = document.getElementById('chapaCat'); c.textContent = S.auto.categoria || 'Cuaderno de pista'; }
+function pintar() {
+  var r = ruta(), p = r[0] || 'inicio', h = '', tab = 'inicio';
+  if (p !== 'checklist') vistaChecklist.edit = false;
+  clearInterval(timerProx); if (!(p === 'salida' && r[1] === 'nueva')) salidaPre = null;
+  aplicarTema(); cabecera();
+  if (p === 'inicio') h = vistaInicio();
+  else if (p === 'checklist') { tab = 'checklist'; h = vistaChecklist(r[1]); }
+  else if (p === 'salidas') { tab = 'salidas'; h = vistaSalidas(); }
+  else if (p === 'salida') { tab = 'salidas'; if (r[1] === 'nueva') h = vistaSalidaForm(null, preSalida()); else if (r[2] === 'editar') { var s = S.salidas.filter(function (x) { return x.id === r[1]; })[0]; h = s ? vistaSalidaForm(s) : vistaSalida(r[1]); } else h = vistaSalida(r[1]); }
+  else if (p === 'mant') { tab = 'mant'; if (r[1] === 'nueva') h = vistaTareaForm(); else if (r[1] && r[2] === 'editar') { var t = S.tareas.filter(function (x) { return x.id === r[1]; })[0]; h = t ? vistaTareaForm(t) : vistaTarea(r[1]); } else if (r[1]) h = vistaTarea(r[1]); else h = vistaMant(); }
+  else if (p === 'fechas') { tab = 'fechas'; h = vistaFechas(); }
+  else if (p === 'fecha') { tab = 'fechas'; if (r[1] === 'nueva') h = vistaFechaNueva(); else if (r[2] === 'tanda') h = vistaTanda(r[1], r[3]); else h = vistaFecha(r[1]); }
+  else if (p === 'ajustes') { tab = ''; h = vistaAjustes(); }
+  else h = vistaInicio();
+  marcarTab(tab); app.innerHTML = h; window.scrollTo(0, 0);
+  if (!almacenOK && p !== 'ajustes') app.insertAdjacentHTML('afterbegin', '<p class="aviso">Este navegador no deja guardar los datos: se van a perder al cerrar la página.</p>');
+  enlazar(p, r);
+}
+
+/* ---------- acciones de cada pantalla ---------- */
+function enlazar(p, r) {
+  var q = function (id) { return document.getElementById(id); };
+  if (p === 'checklist') {
+    var k = r[1] === 'despues' ? 'despues' : 'antes';
+    app.onclick = function (e) {
+      var t = e.target.closest('[data-tilde]');
+      if (t) { var id = t.getAttribute('data-tilde'); S.marcas[k][id] = !S.marcas[k][id]; guardar(); t.setAttribute('aria-checked', String(!!S.marcas[k][id])); var x = resumenChecklist(k); q('barra').style.width = (x.total ? Math.round(x.hechos / x.total * 100) : 0) + '%'; q('conteo').textContent = x.hechos + ' de ' + x.total + ' hechos'; q('listo').classList.toggle('oculto', !(x.total && x.hechos === x.total)); return; }
+      if (e.target.id === 'limpiar') { S.marcas[k] = {}; guardar(); repintar(); return; }
+      if (e.target.id === 'editarLista') { vistaChecklist.edit = true; pintar(); return; }
+      if (e.target.id === 'terminarEdicion') { vistaChecklist.edit = false; pintar(); return; }
+      if (e.target.id === 'agregarPunto') { agregarPunto(k); return; }
+      var l = S.checklists[k], i;
+      var b = e.target.closest('[data-subir],[data-bajar],[data-borrar]'); if (!b) return;
+      var id2 = b.getAttribute('data-subir') || b.getAttribute('data-bajar') || b.getAttribute('data-borrar');
+      i = l.findIndex(function (x) { return x.id === id2; }); if (i < 0) return;
+      if (b.hasAttribute('data-subir') && i > 0) { var a = l[i]; l[i] = l[i - 1]; l[i - 1] = a; }
+      else if (b.hasAttribute('data-bajar') && i < l.length - 1) { var c2 = l[i]; l[i] = l[i + 1]; l[i + 1] = c2; }
+      else if (b.hasAttribute('data-borrar')) { l.splice(i, 1); delete S.marcas[k][id2]; }
+      guardar(); repintar();
+    };
+    app.onchange = function (e) { var id = e.target.getAttribute && e.target.getAttribute('data-edit'); if (!id) return; var x = S.checklists[k].filter(function (y) { return y.id === id; })[0]; if (x && e.target.value.trim()) { x.t = e.target.value.trim().slice(0, 120); guardar(); } };
+    if (q('nuevoPunto')) q('nuevoPunto').onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); agregarPunto(k); } };
+    return;
+  }
+  app.onclick = null; app.onchange = null;
+  if (p === 'inicio') cuentaRegresiva();
+  if (p === 'fecha') { enlazarFecha(r); return; }
+  if (p === 'salida' && (r[1] === 'nueva' || r[2] === 'editar')) {
+    activarDictado();
+    var editando = r[2] === 'editar' ? S.salidas.filter(function (x) { return x.id === r[1]; })[0] : null;
+    q('formSalida').onsubmit = function (e) { e.preventDefault(); guardarSalida(editando); };
+  } else if (p === 'salida' && r[1] && r[1] !== 'nueva' && q('borrarSalida')) {
+    q('borrarSalida').onclick = async function () { if (await preguntar('¿Borrar esta salida? No se puede deshacer.', 'Borrar', true)) { var id = this.getAttribute('data-id'); S.salidas = S.salidas.filter(function (x) { return x.id !== id; }); S.fechas.forEach(function (f) { f.sesiones.forEach(function (t) { if (t.salidaId === id) t.salidaId = ''; }); }); guardar(); location.hash = '#/salidas'; aviso('Salida borrada'); } };
+  } else if (p === 'mant') {
+    if (q('ejemplos')) q('ejemplos').onclick = function () { EJEMPLOS.forEach(function (n) { var fijo = /cintur|extintor|casco/i.test(n); S.tareas.push({ id: uid(), nombre: n, tipo: fijo ? 'fijo' : 'salidas', cada: null, ultimo: S.contadores.salidas, ultima: hoyISO(), fecha: '', nota: '' }); }); guardar(); pintar(); aviso('Tareas de ejemplo cargadas: falta ponerles el plazo'); };
+    if (q('formTarea')) { formularioTarea(r[1] && r[1] !== 'nueva' ? S.tareas.filter(function (x) { return x.id === r[1]; })[0] : null); }
+    if (q('marcarHecha')) q('marcarHecha').onclick = function () { marcarHecha(this.getAttribute('data-id')); };
+    if (q('borrarTarea')) q('borrarTarea').onclick = async function () { if (await preguntar('¿Borrar esta tarea?', 'Borrar', true)) { var id = this.getAttribute('data-id'); S.tareas = S.tareas.filter(function (x) { return x.id !== id; }); guardar(); location.hash = '#/mant'; aviso('Tarea borrada'); } };
+  } else if (p === 'ajustes') {
+    q('formAjustes').onsubmit = function (e) { e.preventDefault(); guardarAjustes(); };
+    q('copiar').onclick = function () { var t = JSON.stringify(S); q('cajaCopia').classList.remove('oculto'); q('textoCopia').value = t; q('textoCopia').focus(); q('textoCopia').select(); try { navigator.clipboard.writeText(t).then(function () { q('msgCopia').textContent = 'Copiado. Pegalo en tus notas o mandátelo por WhatsApp.'; }, function () { q('msgCopia').textContent = 'Mantené apretado el texto de arriba y elegí Copiar.'; }); } catch (e2) { q('msgCopia').textContent = 'Mantené apretado el texto de arriba y elegí Copiar.'; } };
+    q('restaurar').onclick = async function () {
+      var t = q('pegar').value.trim(), o; if (!t) { q('msgCopia').textContent = 'Pegá primero el texto de la copia.'; return; }
+      try { o = JSON.parse(t); } catch (e) { q('msgCopia').textContent = 'Ese texto no es una copia válida.'; return; }
+      if (!o || typeof o !== 'object' || o.v !== 1 || !Array.isArray(o.salidas) || !Array.isArray(o.tareas)) { q('msgCopia').textContent = 'Ese texto no parece una copia del cuaderno.'; return; }
+      if (!(await preguntar('Se reemplazan todos los datos de este celular por los de la copia. ¿Restaurar?', 'Restaurar', true))) return;
+      S = migrar(o); guardar(); pintar(); aviso('Copia restaurada');
+    };
+    q('borrarTodo').onclick = async function () { if (await preguntar('Se borran todas las salidas, tareas y ajustes de este celular. ¿Seguro?', 'Borrar todo', true)) { S = nuevoEstado(); guardar(); location.hash = '#/inicio'; pintar(); aviso('Datos borrados'); } };
+  }
+}
+function enlazarFecha(r) {
+  var q = function (id) { return document.getElementById(id); };
+  if (r[1] === 'nueva') {
+    q('fe_modo').onchange = function () { q('g_pruebas').classList.toggle('oculto', q('fe_modo').value === 'blanco'); };
+    q('formFecha').onsubmit = function (e) {
+      e.preventDefault(); var modo = q('fe_modo').value, sab = q('fe_sabado').value, err = q('errFecha');
+      if (modo !== 'blanco' && !sab) { err.textContent = 'Poné la fecha del sábado.'; err.classList.remove('oculto'); return; }
+      var f = armarFecha(q('fe_pista').value.trim().slice(0, 60), sab, modo, +q('fe_pruebas').value || 3);
+      S.fechas.push(f); guardar(); location.hash = '#/fecha/' + f.id; aviso(modo === 'blanco' ? 'Fecha creada: agregá las tandas' : 'Fin de semana armado: poné la hora de cada tanda');
+    };
+    prepararIA().then(function () { var b = q('bloqueIA'); if (b && ia.sample) { b.classList.remove('oculto'); if (ia.tipos.length) q('fotosPrograma').accept = ia.tipos.join(','); q('leerPrograma').onclick = leerPrograma; q('detenerIA').onclick = function () { if (ia.ctl) ia.ctl.abort(); }; } });
+    return;
+  }
+  var f = buscarFecha(r[1]); if (!f) return;
+  if (r[2] === 'tanda') return enlazarTanda(f, r[3]);
+  if (q('yaRevisado')) q('yaRevisado').onclick = function () { f.revisar = false; guardar(); pintar(); aviso('Listo, programa revisado'); };
+  if (q('borrarFecha')) q('borrarFecha').onclick = async function () { if (await preguntar('¿Borrar esta fecha con todas sus tandas? Las salidas que cargaste se conservan.', 'Borrar', true)) { S.fechas = S.fechas.filter(function (x) { return x.id !== f.id; }); guardar(); location.hash = '#/fechas'; aviso('Fecha borrada'); } };
+}
+function enlazarTanda(f, sid) {
+  var q = function (id) { return document.getElementById(id); }, nueva = sid === 'nueva', t = nueva ? null : f.sesiones.filter(function (x) { return x.id === sid; })[0];
+  if (!nueva && !t) return;
+  q('formTanda').onsubmit = function (e) {
+    e.preventDefault(); var nombre = q('ta_nombre').value.trim(), err = q('errTanda');
+    if (!nombre) { err.textContent = 'Poné el nombre de la tanda.'; err.classList.remove('oculto'); return; }
+    var x = t || nuevaTanda(nombre, '', '', q('ta_tipo').value);
+    x.nombre = nombre; x.tipo = q('ta_tipo').value; x.dia = q('ta_dia').value; x.hora = q('ta_hora').value;
+    if (nueva) f.sesiones.push(x);
+    guardar(); location.hash = '#/fecha/' + f.id; aviso('Tanda guardada');
+  };
+  if (nueva) return;
+  q('formResultado').onsubmit = function (e) { e.preventDefault(); t.resultado = { puesto: q('re_puesto').value.trim().slice(0, 12), tiempo: q('re_tiempo').value.trim().slice(0, 14), nota: q('re_nota').value.trim().slice(0, 120) }; guardar(); pintar(); aviso('Resultado guardado'); };
+  if (q('alternarHecha')) q('alternarHecha').onclick = function () { t.hecha = !t.hecha; guardar(); pintar(); };
+  q('borrarTanda').onclick = async function () { if (await preguntar('¿Borrar la tanda «' + t.nombre + '»?', 'Borrar', true)) { f.sesiones = f.sesiones.filter(function (x) { return x.id !== t.id; }); guardar(); location.hash = '#/fecha/' + f.id; aviso('Tanda borrada'); } };
+}
+function agregarPunto(k) { var i = document.getElementById('nuevoPunto'), t = i.value.trim(); if (!t) { i.focus(); return; } S.checklists[k].push({ id: uid(), t: t.slice(0, 120) }); guardar(); repintar(); var n = document.getElementById('nuevoPunto'); if (n) n.focus(); }
+
+function guardarSalida(edit) {
+  var q = function (id) { return document.getElementById(id); }, err = q('errSalida');
+  var fecha = q('f_fecha').value; if (!fecha) { err.textContent = 'Poné la fecha de la salida.'; err.classList.remove('oculto'); return; }
+  var mejorTxt = q('f_mejor').value.trim();
+  if (mejorTxt && parseTiempo(mejorTxt) == null) { err.textContent = 'La mejor vuelta se escribe como 1:23.456 o 83.456.'; err.classList.remove('oculto'); q('f_mejor').focus(); return; }
+  var pres = {}; ['di', 'dd', 'ti', 'td'].forEach(function (k) { var f = num(q('p_' + k + '_f').value), c = num(q('p_' + k + '_c').value); if (f != null || c != null) pres[k] = { frio: f, caliente: c }; });
+  var vueltas = num(q('f_vueltas').value), km = num(q('f_km').value), horas = num(q('f_horas').value);
+  var s = edit || { id: uid(), creada: new Date().toISOString() };
+  var antes = edit ? { km: s.km || 0, horas: s.horas || 0 } : { km: 0, horas: 0 };
+  s.fecha = fecha; s.pista = q('f_pista').value.trim(); s.tipo = q('f_tipo').value; s.clima = q('f_clima').value;
+  s.tAmb = num(q('f_tamb').value); s.tPista = num(q('f_tpista').value); s.presiones = pres; s.reglajes = q('f_reglajes').value.trim();
+  s.mejor = mejorTxt ? mostrarTiempo(parseTiempo(mejorTxt)) : ''; s.vueltas = vueltas; s.km = km; s.horas = horas; s.notas = q('f_notas').value.trim();
+  var rec = false;
+  if (!edit) {
+    s.checks = { antes: resumenChecklist('antes'), despues: resumenChecklist('despues') };
+    S.salidas.push(s); S.contadores.salidas += 1;
+    S.marcas = { antes: {}, despues: {} };
+    if (salidaPre) { var tf = buscarFecha(salidaPre.fid), tt = tf && tf.sesiones.filter(function (x) { return x.id === salidaPre.sid; })[0]; if (tt) { s.fechaId = tf.id; s.sesionId = tt.id; tt.salidaId = s.id; tt.hecha = true; } }
+  }
+  if (s.mejor && s.pista) { var prev = mejorDeLaPista(s.pista, s.id); rec = prev != null && parseTiempo(s.mejor) < prev; }
+  S.contadores.km = Math.max(0, S.contadores.km + (km || 0) - antes.km);
+  S.contadores.horas = Math.max(0, Math.round((S.contadores.horas + (horas || 0) - antes.horas) * 100) / 100);
+  guardar(); location.hash = '#/salida/' + s.id;
+  aviso(rec ? 'Guardada. Es tu mejor vuelta en esta pista.' : (edit ? 'Cambios guardados' : 'Salida guardada. Los checklists quedaron limpios para la próxima.'));
+}
+function formularioTarea(edit) {
+  var q = function (id) { return document.getElementById(id); };
+  function ver() {
+    var t = q('t_tipo').value, cont = t === 'salidas' || t === 'km' || t === 'horas';
+    q('g_cada').classList.toggle('oculto', t === 'fijo'); q('g_ultimo').classList.toggle('oculto', !cont); q('g_ultima').classList.toggle('oculto', t !== 'meses'); q('g_fecha').classList.toggle('oculto', t !== 'fijo');
+    q('l_cada').textContent = t === 'meses' ? 'Cada cuántos meses' : t === 'km' ? 'Cada cuántos km' : t === 'horas' ? 'Cada cuántas horas de motor' : 'Cada cuántas salidas';
+    q('l_ultimo').textContent = t === 'km' ? 'Se hizo por última vez a los (km)' : t === 'horas' ? 'Se hizo por última vez a las (horas de motor)' : 'Se hizo por última vez en la salida número';
+    q('contadorHoy').textContent = fmt(S.contadores[cont ? t : 'salidas']);
+  }
+  var tipoInicial = q('t_tipo'); tipoInicial.onchange = function () { if (!edit) { var t = q('t_tipo').value; if (S.contadores[t] != null) q('t_ultimo').value = S.contadores[t]; } ver(); }; ver();
+  q('formTarea').onsubmit = function (e) {
+    e.preventDefault(); var err = q('errTarea'), nombre = q('t_nombre').value.trim(), tipo = q('t_tipo').value, cada = num(q('t_cada').value);
+    function mal(m) { err.textContent = m; err.classList.remove('oculto'); }
+    if (!nombre) return mal('Escribí qué hay que hacer.');
+    if (tipo !== 'fijo' && !(cada > 0)) return mal('Poné cada cuánto toca (un número mayor que cero).');
+    if (tipo === 'fijo' && !q('t_fecha').value) return mal('Poné la fecha de vencimiento.');
+    if (tipo === 'meses' && !q('t_ultima').value) return mal('Poné cuándo se hizo por última vez.');
+    var t = edit || { id: uid() };
+    t.nombre = nombre; t.tipo = tipo; t.cada = tipo === 'fijo' ? null : cada; t.nota = q('t_nota').value.trim();
+    t.ultimo = num(q('t_ultimo').value) || 0; t.ultima = q('t_ultima').value; t.fecha = q('t_fecha').value;
+    if (!edit) S.tareas.push(t);
+    guardar(); location.hash = '#/mant/' + t.id; aviso('Tarea guardada');
+  };
+}
+async function marcarHecha(id) {
+  var t = S.tareas.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+  if (t.tipo === 'fijo') {
+    var caja = document.getElementById('hecha');
+    caja.innerHTML = '<div class="campo"><label for="nuevaFecha">¿Hasta cuándo vale ahora?</label><input type="date" id="nuevaFecha"><div class="acciones"><button class="btn principal chico" id="confirmarFecha">Guardar nueva fecha</button></div></div>';
+    document.getElementById('nuevaFecha').focus();
+    document.getElementById('confirmarFecha').onclick = function () { var f = document.getElementById('nuevaFecha').value; if (!f) return; t.fecha = f; guardar(); pintar(); aviso('Hecha. Nuevo vencimiento: ' + fechaCorta(f)); };
+    return;
+  }
+  if (!(await preguntar('¿Anotar que "' + t.nombre + '" se hizo hoy?', 'Sí, la hice', false))) return;
+  t.ultimo = S.contadores[t.tipo] || 0; t.ultima = hoyISO(); guardar(); pintar(); aviso('Anotada: se hizo hoy');
+}
+function guardarAjustes() {
+  var q = function (id) { return document.getElementById(id); };
+  S.auto = { nombre: q('a_nombre').value.trim().slice(0, 40) || 'Mi auto', categoria: q('a_cat').value.trim().slice(0, 40) };
+  S.unidadPresion = q('a_unidad').value;
+  ['salidas', 'km', 'horas'].forEach(function (k) { var n = num(q('a_' + k).value); if (n != null && n >= 0) S.contadores[k] = n; });
+  var pc = num(q('a_pct').value), dd = num(q('a_dias').value);
+  if (pc != null && pc >= 1 && pc <= 99) S.avisoPct = Math.round(pc); if (dd != null && dd >= 1 && dd <= 365) S.avisoDias = Math.round(dd);
+  S.tema = q('a_tema').value; guardar(); pintar(); aviso('Ajustes guardados');
+}
+
+function repintar() { var y = window.scrollY; pintar(); window.scrollTo(0, y); }
+window.addEventListener('hashchange', pintar);
+window.__cuaderno = { proximaTanda: proximaTanda, interpretarPrograma: interpretarPrograma, armarFecha: armarFecha, textoFecha: textoFecha, estado: function () { return S; }, esc: esc, parseTiempo: parseTiempo, estadoTarea: estadoTarea, sumarMeses: sumarMeses, textoSalida: textoSalida };
+pintar();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+</script>
+</body>
+</html>
